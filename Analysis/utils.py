@@ -39,7 +39,7 @@ def test_stationarity(timeseries):
     fig.show()
 
     print('Results of Dickey Fuller Test:')
-    dftest = adfuller(timeseries.dropna(), autolag='AIC')
+    dftest = adfuller(timeseries['value'].dropna(), autolag='AIC')
     dfoutput = pd.Series(dftest[0:4], index=['Test Statistic','p-value','#Lags Used','Number of Observations Used'])
     for key,value in dftest[4].items():
         dfoutput['Critical Value (%s)'%key] = value
