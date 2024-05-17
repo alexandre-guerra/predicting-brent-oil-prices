@@ -3,10 +3,8 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 import joblib
-import matplotlib.pyplot as plt
 from datetime import datetime
 import plotly.graph_objects as go
-
 
 st.set_page_config(
     page_title="Brent Oil Forecasting App",
@@ -34,6 +32,14 @@ div[data-testid="stMetric"] {{
         padding-right: {5}rem;
         padding-left: {5}rem;
         padding-bottom: {0}rem;
+}}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<style>
+div[data-testid="column"] {{
+  text-align: center;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -99,6 +105,24 @@ st.title('Previsão de Preços do Petróleo Brent')
 st.divider()
 
 st.write("""
+### Resultados do Modelo XGBoost
+""")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    container = st.container(border=True)
+    container.metric(label="Mean Absolute Percentage Error (MAPE)", value="0.02 %", delta=None)
+with col2:
+    container = st.container(border=True)
+    container.metric(label="Root Mean Squared Error (RMSE)", value="1.85", delta=None)
+with col3:
+    container = st.container(border=True)
+    container.metric(label="Mean Absolute Error (MAE)", value="1.27", delta=None)
+
+
+
+st.write("""
 ### Dados Históricos
 """)
 
@@ -106,36 +130,53 @@ ticker = 'BZ=F'
 
 col1, col2 = st.columns(2)
 with col1:
-    st.write(f"**Data de Início:** {start_date}")
+    container = st.container(border=True)
+    container.write(f"**Data Inicial:** {start_date}")
 with col2:
-    st.write(f"**Data de Fim:** {end_date}")
+    container = st.container(border=True)
+    container.write(f"**Data Final:** {end_date}")
 
 data = get_data(ticker, start_date, end_date)
 data = create_features(data)
 
+# Gráfico interativo com Plotly
 fig_historical = go.Figure()
 fig_historical.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Valores Reais'))
 
-fig_historical.update_layout(title='Dados Históricos do Petróleo Brent',
-                             xaxis_title='Data',
-                             yaxis_title='Preço')
+fig_historical.update_layout(
+    xaxis_title='Data',
+    yaxis_title='US$',
+    xaxis=dict(rangeslider=dict(visible=True), type="date")
+)
 
-st.plotly_chart(fig_historical, use_container_width=True)
+container = st.container(border=True)
+container.plotly_chart(fig_historical, use_container_width=True)
 
-st.divider()
 
 st.write("""
 ### Previsão para os Próximos 7 Dias
 """)
 
 forecast_df = forecast_next_days(model, data)
+last_7_days = forecast_df.tail(7)
+
+# Criar o gráfico de previsões de 7 dias
+# fig = go.Figure()
+# fig.add_trace(go.Scatter(x=last_7_days['Date'], y=last_7_days['Close'], mode='lines', name='Previsões de 7 dias', line=dict(dash='dash')))
+
+# fig.update_layout(
+#                   xaxis_title='Data',
+#                   yaxis_title='US$')
 
 fig = go.Figure()
-fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Valores Reais'))
-fig.add_trace(go.Scatter(x=forecast_df['Date'], y=forecast_df['Close'], mode='lines', name='Previsões de 7 dias', line=dict(dash='dash')))
+fig.add_trace(go.Scatter(x=last_7_days['Date'], y=last_7_days['Close'], mode='lines+markers+text', name='Previsões de 7 dias', line=dict(dash='dash'),
+                         text=[f"{value:.2f}" for value in last_7_days['Close']],
+                         textposition="top center"))
 
-fig.update_layout(title='Previsões de 7 dias',
-                  xaxis_title='Data',
-                  yaxis_title='Preço')
+fig.update_layout(xaxis_title='Data',
+                  yaxis_title='US$')
 
-st.plotly_chart(fig)
+container = st.container(border=True)
+container.plotly_chart(fig, use_container_width=True)
+
+st.divider()
