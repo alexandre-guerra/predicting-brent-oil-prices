@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 st.set_page_config(
     page_title="Brent Oil Forecasting App",
     layout="wide",
-    page_icon="☕"
+    page_icon="💸"
 )
 
 st.markdown(""" <style>
@@ -44,7 +44,6 @@ div[data-testid="column"] {{
 </style>
 """, unsafe_allow_html=True)
 
-# Carregar o modelo treinado
 model = joblib.load('xgboost_model.pkl')
 end_date = datetime.today().strftime('%Y-%m-%d')
 start_date = '1987-01-01'
@@ -85,16 +84,14 @@ def forecast_next_days(model, df, days=7):
             forecast_df.loc[i, 'month'],
             forecast_df.loc[i, 'day'],
             forecast_df.loc[i, 'dayofweek'],
-            last_values[0],  # lag1
-            last_values[1],  # lag2
-            last_values[2],  # lag3
-            last_values[3]   # lag7
+            last_values[0],
+            last_values[1],
+            last_values[2], 
+            last_values[3] 
         ]).reshape(1, -1)
         
         yhat = model.predict(features)[0]
         forecasts.append(yhat)
-        
-        # Atualizar lag values
         last_values = np.roll(last_values, 1)
         last_values[0] = yhat
    
@@ -139,7 +136,6 @@ with col2:
 data = get_data(ticker, start_date, end_date)
 data = create_features(data)
 
-# Gráfico interativo com Plotly
 fig_historical = go.Figure()
 fig_historical.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Valores Reais'))
 
@@ -159,14 +155,6 @@ st.write("""
 
 forecast_df = forecast_next_days(model, data)
 last_7_days = forecast_df.tail(7)
-
-# Criar o gráfico de previsões de 7 dias
-# fig = go.Figure()
-# fig.add_trace(go.Scatter(x=last_7_days['Date'], y=last_7_days['Close'], mode='lines', name='Previsões de 7 dias', line=dict(dash='dash')))
-
-# fig.update_layout(
-#                   xaxis_title='Data',
-#                   yaxis_title='US$')
 
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=last_7_days['Date'], y=last_7_days['Close'], mode='lines+markers+text', name='Previsões de 7 dias', line=dict(dash='dash'),
