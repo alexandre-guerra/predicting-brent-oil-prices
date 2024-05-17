@@ -4,12 +4,46 @@ import numpy as np
 import yfinance as yf
 import joblib
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
+from datetime import datetime
+import plotly.graph_objects as go
+
+
+st.set_page_config(
+    page_title="Brent Oil Forecasting App",
+    layout="wide",
+    page_icon="☕"
+)
+
+st.markdown(""" <style>
+footer {visibility: hidden;}
+h1 {text-align: center;}
+</style> """, unsafe_allow_html=True)
+
+st.markdown(f""" <style>
+    .appview-container .main .block-container{{
+        padding-top: {0}rem;
+        padding-right: {1.5}rem;
+        padding-left: {1.5}rem;
+        padding-bottom: {0}rem;
+    }} </style> """, unsafe_allow_html=True)
+
+st.markdown(f"""
+<style>
+div[data-testid="stMetric"] {{
+  padding-top: {0}rem;
+        padding-right: {5}rem;
+        padding-left: {5}rem;
+        padding-bottom: {0}rem;
+}}
+</style>
+""", unsafe_allow_html=True)
 
 # Carregar o modelo treinado
-model = joblib.load('../Files/xgboost_model.pkl')
+model = joblib.load('xgboost_model.pkl')
+end_date = datetime.today().strftime('%Y-%m-%d')
+start_date = '1987-01-01'
 
-def get_data(ticker, start_date, end_date):
+def get_data(ticker, start_date, end_date):    
     data = yf.download(ticker, start=start_date, end=end_date)
     data.reset_index(inplace=True)
     data['Date'] = pd.to_datetime(data['Date'])
@@ -62,19 +96,33 @@ def forecast_next_days(model, df, days=7):
     return forecast_df
 
 st.title('Previsão de Preços do Petróleo Brent')
+st.divider()
 
 st.write("""
 ### Dados Históricos
 """)
 
 ticker = 'BZ=F'
-start_date = st.date_input('Data de Início', value=pd.to_datetime('2022-01-01'))
-end_date = st.date_input('Data de Fim', value=pd.to_datetime('2024-05-17'))
+
+col1, col2 = st.columns(2)
+with col1:
+    st.write(f"**Data de Início:** {start_date}")
+with col2:
+    st.write(f"**Data de Fim:** {end_date}")
 
 data = get_data(ticker, start_date, end_date)
 data = create_features(data)
 
-st.line_chart(data[['Date', 'Close']].set_index('Date'))
+fig_historical = go.Figure()
+fig_historical.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Valores Reais'))
+
+fig_historical.update_layout(title='Dados Históricos do Petróleo Brent',
+                             xaxis_title='Data',
+                             yaxis_title='Preço')
+
+st.plotly_chart(fig_historical, use_container_width=True)
+
+st.divider()
 
 st.write("""
 ### Previsão para os Próximos 7 Dias
@@ -82,8 +130,12 @@ st.write("""
 
 forecast_df = forecast_next_days(model, data)
 
-fig, ax = plt.subplots()
-ax.plot(data['Date'], data['Close'], label='Valores Reais')
-ax.plot(forecast_df['Date'], forecast_df['Close'], label='Previsões de 7 dias', linestyle='dashed')
-ax.legend()
-st.pyplot(fig)
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=data['Date'], y=data['Close'], mode='lines', name='Valores Reais'))
+fig.add_trace(go.Scatter(x=forecast_df['Date'], y=forecast_df['Close'], mode='lines', name='Previsões de 7 dias', line=dict(dash='dash')))
+
+fig.update_layout(title='Previsões de 7 dias',
+                  xaxis_title='Data',
+                  yaxis_title='Preço')
+
+st.plotly_chart(fig)
