@@ -9,7 +9,7 @@ import sys
 import os
 
 sys.path.append(os.path.abspath(os.path.join('.', 'Files')))
-from utils import get_data, load_data, load_gdp_data, load_sp500_data, create_features, forecast_next_days
+from funcs import get_data, load_data, load_gdp_data, load_sp500_data, create_features, forecast_next_days
 
 st.set_page_config(
     page_title="Brent Oil Forecasting App",
