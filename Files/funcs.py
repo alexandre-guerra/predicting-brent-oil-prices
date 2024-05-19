@@ -1,6 +1,4 @@
 import pandas as pd
-import plotly.graph_objs as go
-from statsmodels.tsa.stattools import adfuller
 import yfinance as yf
 import numpy as np
 
