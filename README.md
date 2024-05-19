@@ -2,7 +2,7 @@
 
 **Instituição:** FIAP - Turma 2DTAT
 
-![](https://github.com/alexandre-guerra/Analise-IBOV/blob/master/imagem_tech.png)
+![](https://github.com/alexandre-guerra/predicting-brent-oil-prices/blob/master/Files/fase4.png)
 
 ## POSTECH FIAP - Fase 4 - Data Viz and Production Models
 
